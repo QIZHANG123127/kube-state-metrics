@@ -178,6 +178,31 @@ func (m *MetricsHandler) Run(ctx context.Context) error {
 	return ctx.Err()
 }
 
+// get metrics data and push to pushgateway!
+func (m *MetricsHandler) PushMetrics() {
+	if m.opts.PushGatewayURL == ""{ 
+		return
+	}
+	pushMetricsURL := m.opts.PushGatewayURL + "/metrics/job/" + m.opts.PushJobName + "/instance/" + m.opts.PushInstance
+	log.Infof("Start to get metrics data and push to pushgateway!")
+	go func(){
+		for{
+			m.mtx.RLock()
+			// get metrics data
+			m.metricsWriters = metricsstore.SanitizeHeaders(m.metricsWriters)
+			for _, w := range m.metricsWriters {
+				err := w.Push(pushMetricsURL)
+				if err != nil {
+					log.Warningf("Fail to push data, err info:<%v>", err)
+				}
+			}
+			m.mtx.RUnlock()
+			log.Infof("Successfully get and push data, do another time in 5 seconds!")
+			time.Sleep(5 * time.Second)
+		}
+	}()
+}
+
 // ServeHTTP implements the http.Handler interface. It writes all generated
 // metrics to the response body.
 func (m *MetricsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
