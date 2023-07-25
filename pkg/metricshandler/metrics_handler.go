@@ -26,7 +26,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-
+	"time"
 	"github.com/prometheus/common/expfmt"
 
 	appsv1 "k8s.io/api/apps/v1"
@@ -39,6 +39,7 @@ import (
 	ksmtypes "k8s.io/kube-state-metrics/v2/pkg/builder/types"
 	metricsstore "k8s.io/kube-state-metrics/v2/pkg/metrics_store"
 	"k8s.io/kube-state-metrics/v2/pkg/options"
+	"qoobing.com/gomod/log"
 )
 
 // MetricsHandler is a http.Handler that exposes the main kube-state-metrics
@@ -178,7 +179,7 @@ func (m *MetricsHandler) Run(ctx context.Context) error {
 	return ctx.Err()
 }
 
-// get metrics data and push to pushgateway!
+// Get metrics data and push to pushgateway!
 func (m *MetricsHandler) PushMetrics() {
 	if m.opts.PushGatewayURL == ""{ 
 		return
@@ -188,7 +189,7 @@ func (m *MetricsHandler) PushMetrics() {
 	go func(){
 		for{
 			m.mtx.RLock()
-			// get metrics data
+			// Get metrics data
 			m.metricsWriters = metricsstore.SanitizeHeaders(m.metricsWriters)
 			for _, w := range m.metricsWriters {
 				err := w.Push(pushMetricsURL)
