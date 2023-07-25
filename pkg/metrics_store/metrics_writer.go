@@ -19,6 +19,10 @@ package metricsstore
 import (
 	"fmt"
 	"io"
+	"net/http"
+	"strings"
+
+	"qoobing.com/gomod/log"
 )
 
 // MetricsWriterList represent a list of MetricsWriter
